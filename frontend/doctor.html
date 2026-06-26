@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="MEDIRAG-XAI Doctor Portal — Clinical AI decision support with disease prediction, SHAP explainability, drug safety, and PDF report analysis"/>
+  <title>MEDIRAG-XAI | Doctor Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="css/style.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg navbar-medirag">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand-logo" href="index.html">
+      <div class="brand-icon"><i class="fas fa-brain"></i></div>
+      <div>
+        <span class="brand-text">MEDIRAG-XAI</span>
+        <span class="brand-sub">Doctor Portal</span>
+      </div>
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span style="color:var(--primary)"><i class="fas fa-bars"></i></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item"><a class="nav-link-custom" href="index.html"><i class="fas fa-home me-1"></i>Home</a></li>
+        <li class="nav-item"><a class="nav-link-custom active" href="doctor.html"><i class="fas fa-stethoscope me-1"></i>Doctor</a></li>
+        <li class="nav-item"><a class="nav-link-custom" href="patient.html"><i class="fas fa-user me-1"></i>Patient</a></li>
+        <li class="nav-item"><a class="nav-link-custom" href="analytics.html"><i class="fas fa-chart-line me-1"></i>Analytics</a></li>
+      </ul>
+      <div class="ms-3 mt-2 mt-lg-0">
+        <div class="badge-pill badge-success">
+          <span id="apiStatus">⚡ Connecting...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+<div class="container-fluid px-4">
+
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+          <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.25rem">
+            <i class="fas fa-stethoscope me-2" style="color:var(--primary)"></i>Clinical Decision Support
+          </h1>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin:0">
+            AI-powered diagnosis assistance with Explainable AI • Real Kaggle Dataset (4,920 samples, 41 diseases)
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn-outline-custom" id="clearAll" onclick="clearAll()">
+            <i class="fas fa-redo me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ── LEFT COLUMN ─────────────────────────────────────────────── -->
+    <div class="col-xl-4 col-lg-5">
+
+      <!-- Symptom Selection -->
+      <div class="card-glass mb-4" id="symptomPanel">
+        <div class="card-header-glass">
+          <div class="card-icon card-icon-blue"><i class="fas fa-list-check"></i></div>
+          <div>
+            <div class="card-title-glass">Symptom Input</div>
+            <div class="card-subtitle-glass">Select all present symptoms (132 features)</div>
+          </div>
+        </div>
+        <div class="p-3">
+          <!-- Search -->
+          <div class="mb-3 position-relative">
+            <input type="text" class="form-control-glass" id="symptomSearch" 
+                   placeholder="🔍 Search symptoms..." oninput="filterSymptoms(this.value)" style="width:100%"/>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span style="font-size:0.78rem;color:var(--text-muted)">
+              Selected: <strong id="selectedCount" style="color:var(--primary)">0</strong>
+            </span>
+            <button class="btn-outline-custom" style="padding:0.25rem 0.6rem;font-size:0.75rem" onclick="clearSymptoms()">
+              Clear All
+            </button>
+          </div>
+          <div class="symptom-grid" id="symptomGrid">
+            <!-- Populated by JS -->
+          </div>
+          <!-- Patient Info -->
+          <div class="mt-3 pt-3 border-top" style="border-color:var(--border-light)!important">
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label-glass">Age</label>
+                <input type="number" class="form-control-glass" id="patientAge" placeholder="25" min="1" max="120" style="width:100%"/>
+              </div>
+              <div class="col-6">
+                <label class="form-label-glass">Gender</label>
+                <select class="form-control-glass" id="patientGender" style="width:100%">
+                  <option value="">Select</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button class="btn-primary-custom w-100 mt-3" id="predictBtn" onclick="runPrediction()">
+            <i class="fas fa-brain me-2"></i> Run AI Prediction
+          </button>
+        </div>
+      </div>
+
+      <!-- Drug Safety Check -->
+      <div class="card-glass mb-4" id="drugPanel">
+        <div class="card-header-glass">
+          <div class="card-icon card-icon-red"><i class="fas fa-pills"></i></div>
+          <div>
+            <div class="card-title-glass">Drug Safety Check</div>
+            <div class="card-subtitle-glass">Contraindications & Interaction Alerts</div>
+          </div>
+        </div>
+        <div class="p-3">
+          <label class="form-label-glass">Drug Name</label>
+          <select class="form-control-glass mb-2" id="drugName" style="width:100%">
+            <option value="">Select a drug...</option>
+            <option>Metformin</option>
+            <option>Lisinopril</option>
+            <option>Aspirin</option>
+            <option>Ibuprofen</option>
+            <option>Amoxicillin</option>
+            <option>Atorvastatin</option>
+            <option>Warfarin</option>
+            <option>Omeprazole</option>
+            <option>Insulin</option>
+            <option>Prednisolone</option>
+            <option>Levothyroxine</option>
+            <option>Metoprolol</option>
+            <option>Ciprofloxacin</option>
+            <option>Furosemide</option>
+            <option>Hydroxychloroquine</option>
+          </select>
+          <label class="form-label-glass">Patient Conditions (comma-separated)</label>
+          <input type="text" class="form-control-glass mb-2" id="patientConditions" placeholder="e.g. Diabetes, Kidney Disease" style="width:100%"/>
+          <label class="form-label-glass">Allergies (comma-separated)</label>
+          <input type="text" class="form-control-glass mb-2" id="patientAllergies" placeholder="e.g. Penicillin" style="width:100%"/>
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <input type="checkbox" id="isPregnant" style="accent-color:var(--primary)"/>
+            <label for="isPregnant" style="font-size:0.82rem;color:var(--text-secondary);cursor:pointer">Patient is pregnant</label>
+          </div>
+          <button class="btn-danger-custom w-100" onclick="checkDrug()">
+            <i class="fas fa-shield-alt me-2"></i> Check Drug Safety
+          </button>
+          <div id="drugResults" class="mt-3"></div>
+        </div>
+      </div>
+
+      <!-- NER Text Analysis -->
+      <div class="card-glass" id="nerPanel">
+        <div class="card-header-glass">
+          <div class="card-icon card-icon-cyan"><i class="fas fa-microscope"></i></div>
+          <div>
+            <div class="card-title-glass">Clinical NLP — NER</div>
+            <div class="card-subtitle-glass">Extract clinical entities from text</div>
+          </div>
+        </div>
+        <div class="p-3">
+          <label class="form-label-glass">Clinical Notes</label>
+          <textarea class="form-control-glass mb-2" id="nerText" rows="4" 
+            placeholder="e.g. Patient has diabetes and hypertension. Takes metformin 500mg and lisinopril 10mg daily. HbA1c: 8.2%. History of kidney disease." 
+            style="width:100%;resize:vertical"></textarea>
+          <button class="btn-outline-custom w-100" onclick="runNER()">
+            <i class="fas fa-search me-2"></i> Extract Entities
+          </button>
+          <div id="nerResults" class="mt-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MIDDLE + RIGHT COLUMN ──────────────────────────────────── -->
+    <div class="col-xl-8 col-lg-7">
+
+      <!-- Prediction Results -->
+      <div class="card-glass mb-4" id="predictionResults" style="display:none;">
+        <div class="card-header-glass">
+          <div class="card-icon card-icon-blue"><i class="fas fa-brain"></i></div>
+          <div>
+            <div class="card-title-glass">Prediction Results</div>
+            <div class="card-subtitle-glass">Top-3 diagnoses with confidence scores</div>
+          </div>
+          <div class="ms-auto">
+            <span class="badge-pill badge-success"><i class="fas fa-check me-1"></i>Model Active</span>
+          </div>
+        </div>
+        <div class="p-4" id="predictionContent"></div>
+      </div>
+
+      <!-- SHAP Explainability -->
+      <div class="card-glass mb-4" id="shapPanel" style="display:none;">
+        <div class="card-header-glass">
+          <div class="card-icon card-icon-purple"><i class="fas fa-chart-bar"></i></div>
+          <div>
+            <div class="card-title-glass">SHAP Explainability</div>
+            <div class="card-subtitle-glass">Feature importance for top prediction</div>
+          </div>
+        </div>
+        <div class="p-4">
+          <canvas id="shapChart" height="200"></canvas>
+          <div id="shapSummary" class="mt-3"></div>
+        </div>
+      </div>
+
+      <!-- Clinical RAG Evidence -->
+      <div class="card-glass mb-4" id="ragPanel">
+        <div class="card-header-glass">
+          <div class="card-icon card-icon-green"><i class="fas fa-book-medical"></i></div>
+          <div>
+            <div class="card-title-glass">Clinical Evidence Viewer</div>
+            <div class="card-subtitle-glass">WHO/CDC guideline retrieval via RAG</div>
+          </div>
+        </div>
+        <div class="p-3">
+          <div class="d-flex gap-2 mb-3">
+            <input type="text" class="form-control-glass flex-grow-1" id="ragQuery" 
+                   placeholder="Ask a clinical question... e.g. What is the first-line treatment for Type 2 Diabetes?" 
+                   onkeyup="if(event.key==='Enter')runRAG()"/>
+            <button class="btn-primary-custom" onclick="runRAG()" id="ragBtn">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="suggested-q-btn" style="width:auto" onclick="askRAG('What are the diagnostic criteria for diabetes?')">
+              Diabetes diagnosis criteria
+            </button>
+            <button class="suggested-q-btn" style="width:auto" onclick="askRAG('First-line treatment for hypertension')">
+              Hypertension treatment
+            </button>
+            <button class="suggested-q-btn" style="width:auto" onclick="askRAG('TB treatment regimen WHO')">
+              TB treatment protocol
+            </button>
+          </div>
+          <div id="ragResults"></div>
+        </div>
+      </div>
+
+      <!-- PDF Upload & Analysis -->
+      <div class="card-glass" id="pdfPanel">
+        <div class="card-header-glass">
+          <div class="card-icon card-icon-amber"><i class="fas fa-file-medical"></i></div>
+          <div>
+            <div class="card-title-glass">PDF Report Analyzer</div>
+            <div class="card-subtitle-glass">Blood, CBC, Thyroid, Liver, Kidney Reports</div>
+          </div>
+        </div>
+        <div class="p-4">
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('reportFile').click()"
+               ondragover="event.preventDefault();this.classList.add('drag-over')"
+               ondrop="handleFileDrop(event)">
+            <i class="fas fa-cloud-upload-alt" style="font-size:2.5rem;color:var(--primary);margin-bottom:1rem;display:block"></i>
+            <div style="font-weight:600;margin-bottom:0.5rem">Drop PDF or Image Here</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">Supports PDF, JPG, PNG • Max 10MB</div>
+            <input type="file" id="reportFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="uploadReport(this)"/>
+          </div>
+          <div id="reportResults" class="mt-3"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Footer -->
+<footer class="footer-glass mt-5">
+  <div class="container-fluid px-4">
+    <div class="row align-items-center">
+      <div class="col-md-6 text-muted" style="font-size:0.8rem">© 2024 MEDIRAG-XAI — Doctor Portal</div>
+      <div class="col-md-6 text-md-end" style="font-size:0.78rem;color:var(--warning)">
+        <i class="fas fa-exclamation-triangle me-1"></i>For research use only. Always consult qualified clinicians.
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast-container-custom" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/doctor.js?v=3"></script>
+</body>
+</html>

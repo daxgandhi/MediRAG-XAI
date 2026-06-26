@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="MEDIRAG-XAI — Explainable AI-powered Clinical Decision Support & Patient Education Platform using RAG, NLP, and Deep Learning"/>
+  <title>MEDIRAG-XAI | Healthcare AI Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="css/style.css" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg navbar-medirag">
+  <div class="container">
+    <a class="navbar-brand-logo" href="index.html">
+      <div class="brand-icon"><i class="fas fa-brain"></i></div>
+      <div>
+        <span class="brand-text">MEDIRAG-XAI</span>
+        <span class="brand-sub">Healthcare AI Platform</span>
+      </div>
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span style="color:var(--primary)"><i class="fas fa-bars"></i></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item"><a class="nav-link-custom active" href="index.html"><i class="fas fa-home me-1"></i>Home</a></li>
+        <li class="nav-item"><a class="nav-link-custom" href="doctor-login.html"><i class="fas fa-stethoscope me-1"></i>Doctor Portal</a></li>
+        <li class="nav-item"><a class="nav-link-custom" href="patient-login.html"><i class="fas fa-user me-1"></i>Patient Portal</a></li>
+        <li class="nav-item"><a class="nav-link-custom" href="analytics.html"><i class="fas fa-chart-line me-1"></i>Analytics</a></li>
+      </ul>
+      <div class="ms-3 d-flex gap-2 mt-2 mt-lg-0">
+        <a href="doctor-login.html" class="btn-primary-custom" style="text-decoration:none; font-size:0.8rem; padding:0.5rem 1rem;">
+          <i class="fas fa-stethoscope me-1"></i> Doctor Login
+        </a>
+        <a href="patient-login.html" class="btn-outline-custom" style="text-decoration:none; font-size:0.8rem; padding:0.5rem 1rem;">
+          <i class="fas fa-user me-1"></i> Patient Login
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────────── -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="hero-badge">
+          <i class="fas fa-circle-check"></i> Research-Grade Healthcare AI
+        </div>
+        <h1 class="hero-title">
+          Explainable AI for<br>
+          <span class="gradient-text">Clinical Decision Support</span>
+        </h1>
+        <p class="hero-description">
+          MEDIRAG-XAI combines multi-disease prediction, clinical NLP, PDF report analysis,
+          RAG-powered knowledge retrieval, and Explainable AI to empower doctors and educate patients —
+          all in one platform.
+        </p>
+        <div class="hero-actions">
+          <a href="doctor-login.html" class="btn-hero-primary">
+            <i class="fas fa-stethoscope"></i> Doctor Portal
+          </a>
+          <a href="patient-login.html" class="btn-hero-outline">
+            <i class="fas fa-comments"></i> Patient Chatbot
+          </a>
+        </div>
+        <div class="mt-4 d-flex gap-4 flex-wrap">
+          <div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--primary)">41</div>
+            <div style="font-size:0.78rem;color:var(--text-muted)">Disease Classes</div>
+          </div>
+          <div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--success)">132</div>
+            <div style="font-size:0.78rem;color:var(--text-muted)">Symptom Features</div>
+          </div>
+          <div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--accent)">4,920</div>
+            <div style="font-size:0.78rem;color:var(--text-muted)">Training Samples</div>
+          </div>
+          <div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--warning)">10</div>
+            <div style="font-size:0.78rem;color:var(--text-muted)">AI Modules</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="position-relative">
+          <div class="card-glass p-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <div class="card-icon card-icon-blue"><i class="fas fa-brain"></i></div>
+              <div>
+                <div class="card-title-glass">Live Prediction Demo</div>
+                <div class="card-subtitle-glass">AI Disease Prediction + SHAP Explainability</div>
+              </div>
+            </div>
+            <div class="p-3 mb-3" style="background:rgba(15,23,42,0.6);border-radius:10px;">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="prediction-rank rank-1">1</div>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between mb-1">
+                    <strong style="font-size:0.9rem">Diabetes Mellitus</strong>
+                    <span class="badge-pill badge-danger" style="font-size:0.7rem">91.4%</span>
+                  </div>
+                  <div class="progress-glass"><div class="progress-fill progress-red" style="width:91.4%"></div></div>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="prediction-rank rank-2">2</div>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between mb-1">
+                    <strong style="font-size:0.9rem">Hypoglycemia</strong>
+                    <span class="badge-pill badge-warning" style="font-size:0.7rem">6.2%</span>
+                  </div>
+                  <div class="progress-glass"><div class="progress-fill progress-amber" style="width:6.2%"></div></div>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-3">
+                <div class="prediction-rank rank-3">3</div>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between mb-1">
+                    <strong style="font-size:0.9rem">Hypothyroidism</strong>
+                    <span class="badge-pill badge-primary" style="font-size:0.7rem">2.4%</span>
+                  </div>
+                  <div class="progress-glass"><div class="progress-fill progress-blue" style="width:2.4%"></div></div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:0.78rem;color:var(--text-muted);text-align:center;">
+              <i class="fas fa-shield-alt me-1" style="color:var(--success)"></i>
+              Top 3 predictions with SHAP feature importance
+            </div>
+          </div>
+          <!-- Floating badges -->
+          <div class="position-absolute" style="top:-20px;right:-10px;transform:rotate(8deg)">
+            <div class="badge-pill badge-success" style="padding:0.5rem 0.875rem;font-size:0.8rem;box-shadow:var(--shadow-lg)">
+              <i class="fas fa-check me-1"></i> RAG-Powered
+            </div>
+          </div>
+          <div class="position-absolute" style="bottom:-15px;left:-10px;transform:rotate(-5deg)">
+            <div class="badge-pill badge-purple" style="padding:0.5rem 0.875rem;font-size:0.8rem;box-shadow:var(--shadow-lg)">
+              <i class="fas fa-atom me-1"></i> XAI Enabled
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ──────────────────────────────────────────────────────── -->
+<section style="padding:4rem 0; background:rgba(30,41,59,0.3);">
+  <div class="container">
+    <div class="text-center mb-5 section-header">
+      <div class="section-badge"><i class="fas fa-cubes me-1"></i> Platform Modules</div>
+      <h2 class="section-title">10 Integrated AI Modules</h2>
+      <p class="section-subtitle">Each module powered by state-of-the-art machine learning and NLP</p>
+    </div>
+    <div class="row g-4">
+      <!-- Module Cards -->
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card fade-in">
+          <div class="feature-icon card-icon-blue"><i class="fas fa-brain"></i></div>
+          <h3 class="feature-title">Multi-Disease Prediction</h3>
+          <p class="feature-desc">PyTorch neural network trained on 4,920 real patient records across 41 diseases with 132 symptom features. Top-3 prediction with confidence scores.</p>
+          <div class="mt-3"><span class="badge-pill badge-primary">PyTorch NN</span> <span class="badge-pill badge-cyan">4,920 rows</span></div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card fade-in">
+          <div class="feature-icon card-icon-purple"><i class="fas fa-chart-bar"></i></div>
+          <h3 class="feature-title">SHAP Explainability</h3>
+          <p class="feature-desc">KernelExplainer reveals which symptoms contributed most to each diagnosis. Fully transparent, research-grade XAI with visual feature importance charts.</p>
+          <div class="mt-3"><span class="badge-pill badge-purple">SHAP</span> <span class="badge-pill badge-primary">Chart.js</span></div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card fade-in">
+          <div class="feature-icon card-icon-cyan"><i class="fas fa-microscope"></i></div>
+          <h3 class="feature-title">Clinical NLP NER</h3>
+          <p class="feature-desc">SciSpacy-powered entity extraction identifies diseases, drugs, symptoms, lab values, and medical history from clinical free text.</p>
+          <div class="mt-3"><span class="badge-pill badge-cyan">SciSpacy</span> <span class="badge-pill badge-success">5 Entity Types</span></div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card fade-in">
+          <div class="feature-icon card-icon-amber"><i class="fas fa-file-medical"></i></div>
+          <h3 class="feature-title">PDF Report Analyzer</h3>
+          <p class="feature-desc">Upload blood CBC, thyroid, liver, and kidney reports. Automatically extracts 20+ lab values, flags abnormals against WHO reference ranges, and generates summaries.</p>
+          <div class="mt-3"><span class="badge-pill badge-warning">PyMuPDF</span> <span class="badge-pill badge-cyan">OCR Fallback</span></div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card fade-in">
+          <div class="feature-icon card-icon-red"><i class="fas fa-pills"></i></div>
+          <h3 class="feature-title">Drug Safety Engine</h3>
+          <p class="feature-desc">Checks contraindications, pregnancy categories (A-X), drug-disease interactions, allergy alerts for 15+ common drugs. Never auto-prescribes — reference only.</p>
+          <div class="mt-3"><span class="badge-pill badge-danger">Safety First</span> <span class="badge-pill badge-warning">15 Drugs</span></div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card fade-in">
+          <div class="feature-icon card-icon-green"><i class="fas fa-database"></i></div>
+          <h3 class="feature-title">Clinical RAG Pipeline</h3>
+          <p class="feature-desc">WHO/CDC guidelines stored in ChromaDB with sentence-transformer embeddings. Questions retrieve evidence → Gemini generates cited answers. Always shows sources.</p>
+          <div class="mt-3"><span class="badge-pill badge-success">ChromaDB</span> <span class="badge-pill badge-primary">Gemini API</span></div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card fade-in">
+          <div class="feature-icon card-icon-blue"><i class="fas fa-comments"></i></div>
+          <h3 class="feature-title">Patient Chatbot</h3>
+          <p class="feature-desc">Conversational AI that answers health questions using RAG. Always shows citations and source chunks. Never answers without retrieved evidence.</p>
+          <div class="mt-3"><span class="badge-pill badge-primary">RAG Chat</span> <span class="badge-pill badge-cyan">Evidence-Based</span></div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card fade-in">
+          <div class="feature-icon card-icon-purple"><i class="fas fa-user-md"></i></div>
+          <h3 class="feature-title">Doctor Portal</h3>
+          <p class="feature-desc">Comprehensive clinical dashboard: symptom prediction, SHAP visualization, drug safety alerts, clinical evidence viewer, PDF analysis, and NER extraction.</p>
+          <div class="mt-3"><span class="badge-pill badge-purple">7 Panels</span> <span class="badge-pill badge-success">Bootstrap 5</span></div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card fade-in">
+          <div class="feature-icon card-icon-green"><i class="fas fa-chart-pie"></i></div>
+          <h3 class="feature-title">Analytics Dashboard</h3>
+          <p class="feature-desc">Real-time disease distribution, prediction confidence trends, common symptom heatmaps, drug alert statistics, and chat usage analytics via Chart.js.</p>
+          <div class="mt-3"><span class="badge-pill badge-success">Chart.js</span> <span class="badge-pill badge-cyan">5 Charts</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Tech Stack ─────────────────────────────────────────────────────── -->
+<section style="padding:4rem 0;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge"><i class="fas fa-layer-group me-1"></i>Technology</div>
+      <h2 class="section-title">Built with Cutting-Edge Tech</h2>
+    </div>
+    <div class="row g-3 justify-content-center">
+      <div class="col-auto"><div class="badge-pill badge-primary" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fab fa-python me-2"></i>FastAPI</div></div>
+      <div class="col-auto"><div class="badge-pill badge-danger" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fas fa-fire me-2"></i>PyTorch</div></div>
+      <div class="col-auto"><div class="badge-pill badge-success" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fas fa-database me-2"></i>ChromaDB</div></div>
+      <div class="col-auto"><div class="badge-pill badge-warning" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fas fa-leaf me-2"></i>MongoDB</div></div>
+      <div class="col-auto"><div class="badge-pill badge-cyan" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fas fa-robot me-2"></i>Gemini API</div></div>
+      <div class="col-auto"><div class="badge-pill badge-purple" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fas fa-chart-area me-2"></i>SHAP</div></div>
+      <div class="col-auto"><div class="badge-pill badge-primary" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fas fa-language me-2"></i>SciSpacy</div></div>
+      <div class="col-auto"><div class="badge-pill badge-success" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fas fa-search me-2"></i>SentenceTransformers</div></div>
+      <div class="col-auto"><div class="badge-pill badge-danger" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fab fa-bootstrap me-2"></i>Bootstrap 5</div></div>
+      <div class="col-auto"><div class="badge-pill badge-cyan" style="padding:0.6rem 1.1rem;font-size:0.85rem"><i class="fas fa-chart-line me-2"></i>Chart.js</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── API Reference ────────────────────────────────────────────────── -->
+<section style="padding:4rem 0; background:rgba(30,41,59,0.2);">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5">
+        <div class="section-badge"><i class="fas fa-code me-1"></i> REST API</div>
+        <h2 class="section-title">Production-Ready API</h2>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-top:0.75rem;">
+          Full FastAPI backend with auto-generated OpenAPI docs, CORS support, async MongoDB, and structured JSON responses.
+        </p>
+        <a href="http://localhost:8000/docs" target="_blank" class="btn-primary-custom mt-3 d-inline-flex align-items-center gap-2" style="text-decoration:none">
+          <i class="fas fa-external-link-alt"></i> Open API Docs (Swagger)
+        </a>
+      </div>
+      <div class="col-lg-7">
+        <div class="card-glass p-4">
+          <table class="lab-table">
+            <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge-pill badge-success">POST</span></td><td style="font-family:var(--font-mono);font-size:0.78rem">/api/predict</td><td>Disease prediction + SHAP</td></tr>
+              <tr><td><span class="badge-pill badge-success">POST</span></td><td style="font-family:var(--font-mono);font-size:0.78rem">/api/chat</td><td>RAG-powered chatbot</td></tr>
+              <tr><td><span class="badge-pill badge-success">POST</span></td><td style="font-family:var(--font-mono);font-size:0.78rem">/api/check-drug</td><td>Drug safety check</td></tr>
+              <tr><td><span class="badge-pill badge-success">POST</span></td><td style="font-family:var(--font-mono);font-size:0.78rem">/api/analyze-report</td><td>PDF lab report analysis</td></tr>
+              <tr><td><span class="badge-pill badge-success">POST</span></td><td style="font-family:var(--font-mono);font-size:0.78rem">/api/ner</td><td>Clinical NLP extraction</td></tr>
+              <tr><td><span class="badge-pill badge-primary">GET</span></td><td style="font-family:var(--font-mono);font-size:0.78rem">/api/analytics</td><td>Dashboard statistics</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────────────────── -->
+<section style="padding:4rem 0;">
+  <div class="container text-center">
+    <div class="card-glass p-5" style="max-width:700px;margin:0 auto;">
+      <div style="font-size:3rem;margin-bottom:1rem">🏥</div>
+      <h2 class="section-title mb-2">Ready to Explore?</h2>
+      <p style="color:var(--text-muted);margin-bottom:1.5rem">Access the Doctor Portal for clinical AI tools or the Patient Portal for health education.</p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="doctor-login.html" class="btn-hero-primary" style="text-decoration:none">
+          <i class="fas fa-stethoscope"></i> Doctor Portal
+        </a>
+        <a href="patient-login.html" class="btn-hero-outline" style="text-decoration:none">
+          <i class="fas fa-user"></i> Patient Portal
+        </a>
+        <a href="analytics.html" class="btn-hero-outline" style="text-decoration:none">
+          <i class="fas fa-chart-line"></i> Analytics
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────── -->
+<footer class="footer-glass">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <span style="color:var(--text-muted)">© 2024 MEDIRAG-XAI — Final Year DLNLP Research Project</span>
+      </div>
+      <div class="col-md-6 text-md-end mt-2 mt-md-0">
+        <span style="color:var(--text-muted)">
+          <i class="fas fa-exclamation-triangle me-1" style="color:var(--warning)"></i>
+          For research & educational use only. Not a substitute for medical advice.
+        </span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast-container-custom" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

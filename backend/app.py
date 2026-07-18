@@ -7,6 +7,7 @@ import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional, List
@@ -156,7 +157,7 @@ def create_app() -> FastAPI:
 
     # ─── ROUTES ───────────────────────────────────────────────────────────────
 
-    @app.get("/")
+    @app.get("/api")
     async def root():
         return {"status": "running", "service": "MEDIRAG-XAI API", "version": "1.0.0"}
 
@@ -377,5 +378,8 @@ def create_app() -> FastAPI:
                 "total_chats": 594,
                 "total_drug_checks": 400,
             })
+
+    # Mount the frontend directory to serve static files
+    app.mount("/", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../frontend"), html=True), name="frontend")
 
     return app

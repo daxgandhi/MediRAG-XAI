@@ -195,6 +195,15 @@ class TestReportAnalyzer:
         rtype2 = self.analyzer._detect_report_type(text_thyroid)
         assert "Thyroid" in rtype2
 
+    def test_thyroid_no_collision_free_and_total(self):
+        text = "TSH: 12.8 mIU/L\nFree T4 (FT4): 0.62 ng/dL\nTotal T3: 2.1 ng/mL"
+        lab_values = self.analyzer._extract_lab_values(text)
+        assert lab_values.get("tsh") == 12.8
+        assert lab_values.get("ft4") == 0.62
+        assert lab_values.get("t3") == 2.1
+        # t4 should NOT match the Free T4 value
+        assert "t4" not in lab_values
+
 
 # ─── API Integration Tests ────────────────────────────────────────────────────
 class TestAPIRoutes:
@@ -214,14 +223,14 @@ class TestAPIRoutes:
         if not self.available: return
         resp = self.client.get("/")
         assert resp.status_code == 200
-        assert "MEDIRAG-XAI" in resp.json()["service"]
+        assert "text/html" in resp.headers.get("content-type", "") or "<!DOCTYPE html>" in resp.text
 
     def test_health_endpoint(self):
         if not self.available: return
         resp = self.client.get("/health")
         assert resp.status_code == 200
         data = resp.json()
-        assert "status" in data
+        assert data["status"] in ("ok", "healthy")
         assert "modules" in data
 
     def test_predict_endpoint(self):

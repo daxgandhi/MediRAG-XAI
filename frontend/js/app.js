@@ -3,7 +3,21 @@
  * API base URL, fetch wrapper, toast notifications, helpers
  */
 
-const API_BASE = '';
+// Dynamic API base URL: works both unified and when frontend is hosted separately (Vercel/Netlify/GitHub Pages)
+const API_BASE = (function() {
+  if (typeof window !== 'undefined') {
+    if (window.MEDIRAG_API_URL) return window.MEDIRAG_API_URL;
+    const stored = localStorage.getItem('MEDIRAG_API_URL');
+    if (stored) return stored;
+    // If running on static host (Vercel/Netlify/GitHub Pages), point to your Render backend
+    if (window.location.hostname.includes('vercel.app') || 
+        window.location.hostname.includes('netlify.app') || 
+        window.location.hostname.includes('github.io')) {
+      return 'https://medirag-ai.onrender.com';
+    }
+  }
+  return '';
+})();
 
 // ── API Client ──────────────────────────────────────────────────────────────
 const api = {

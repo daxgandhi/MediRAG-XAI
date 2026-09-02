@@ -412,14 +412,16 @@ function renderReportResults(data, filename) {
   const numLabValues = Object.keys(labValues).length;
 
   const labRows = Object.entries(labValues).map(([k, v]) => {
-    const isAbnormal = abnormals.some(a => a.test.toLowerCase().includes(k.replace('_', ' ')));
+    const abItem = abnormals.find(a => a.test_key === k);
+    const isAbnormal = !!abItem;
+    const testName = abItem?.test || k.replace(/_/g, ' ').toUpperCase();
     return `
       <tr>
-        <td>${k.replace(/_/g, ' ').toUpperCase()}</td>
-        <td><strong style="color:${isAbnormal ? 'var(--danger)' : 'var(--success)'}">
-          ${v} ${isAbnormal ? '⚠️' : '✓'}
-        </strong></td>
-        <td>${isAbnormal ? `<span class="badge-pill badge-danger">ABNORMAL</span>` : `<span class="badge-pill badge-success">Normal</span>`}</td>
+        <td><strong>${testName}</strong></td>
+        <td><span style="font-weight:700;color:${isAbnormal ? 'var(--danger)' : 'var(--success)'}">
+          ${v} ${abItem ? (abItem.unit || '') : ''} ${isAbnormal ? '⚠️' : '✓'}
+        </span></td>
+        <td>${isAbnormal ? `<span class="badge-pill badge-danger">${abItem.status || 'ABNORMAL'} (${abItem.normal || ''})</span>` : `<span class="badge-pill badge-success">Normal</span>`}</td>
       </tr>
     `;
   }).join('');

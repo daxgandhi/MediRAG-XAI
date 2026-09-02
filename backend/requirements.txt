@@ -31,8 +31,9 @@ PyMuPDF==1.24.5
 Pillow==10.3.0
 pytesseract==0.3.10
 
-# Google Gemini
+# Google Gemini & Groq LLMs
 google-generativeai==0.7.2
+groq==1.7.0
 
 # Data
 scipy==1.13.1

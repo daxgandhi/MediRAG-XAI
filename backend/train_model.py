@@ -180,9 +180,9 @@ def train():
     import joblib
     joblib.dump(le, MODELS_DIR / "label_encoder.pkl")
 
-    print(f"\n[OK] Model saved  → {MODELS_DIR / 'disease_model.pth'}")
-    print(f"[OK] Meta saved   → {MODELS_DIR / 'model_meta.json'}")
-    print(f"[OK] Encoder saved→ {MODELS_DIR / 'label_encoder.pkl'}")
+    print(f"\n[OK] Model saved  -> {MODELS_DIR / 'disease_model.pth'}")
+    print(f"[OK] Meta saved   -> {MODELS_DIR / 'model_meta.json'}")
+    print(f"[OK] Encoder saved-> {MODELS_DIR / 'label_encoder.pkl'}")
     print("\n[INFO] Training complete! You can now run: python main.py\n")
 
 

@@ -32,13 +32,9 @@ class RAGEngine:
             self._load_embedder()
             self._init_chroma()
             self._ingest_documents()
-            self.provider = os.getenv("LLM_PROVIDER", "gemini").lower()
-            if self.provider == "grok":
-                self._init_xai()
-            else:
-                self._init_gemini()
+            self._init_llms()
             self._initialized = True
-            print("[OK] RAG Engine initialized")
+            print("[OK] RAG Engine initialized with Multi-LLM Fallback Pipeline")
         except Exception as e:
             print(f"[WARN] RAG Engine init warning: {e}")
 
@@ -122,55 +118,80 @@ class RAGEngine:
             start = end - overlap
         return [c for c in chunks if len(c.strip()) > 30]
 
-    def _init_gemini(self):
-        api_key = os.getenv("GEMINI_API_KEY", "")
-        if not api_key:
-            print("[WARN] GEMINI_API_KEY not set. RAG will return retrieved context only.")
-            return
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-            self.gemini = genai.GenerativeModel(
-                model_name,
-                generation_config={"temperature": 0.2, "max_output_tokens": 1024},
-                system_instruction=(
-                    "You are a clinical knowledge assistant for MEDIRAG-XAI, a healthcare AI platform. "
-                    "Answer ONLY using the provided clinical evidence. "
-                    "Always cite the source documents. "
-                    "If the provided evidence does not contain a clear answer, say so. "
-                    "Never provide personal medical advice. Always recommend consulting a physician."
-                ),
-            )
-            print(f"[OK] Gemini API connected using model: {model_name}")
-        except Exception as e:
-            print(f"[WARN] Gemini init error: {e}")
+    def _init_llms(self):
+        """Initialize all available LLM providers for automatic failover."""
+        # 1. Groq Init
+        self.groq_key = os.getenv("GROQ_API_KEY", "").strip()
+        self.groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+        self.groq_client = None
+        if self.groq_key and not self.groq_key.startswith("your_"):
+            try:
+                from groq import Groq
+                self.groq_client = Groq(api_key=self.groq_key)
+                print(f"[OK] Groq LLM initialized ({self.groq_model})")
+            except Exception as e:
+                print(f"[WARN] Groq init error: {e}")
 
-    def _init_xai(self):
-        self.xai_key = os.getenv("XAI_API_KEY", "")
-        self.xai_model = os.getenv("XAI_MODEL", "grok-2")
-        if not self.xai_key or self.xai_key == "your_xai_api_key_here":
-            print("[WARN] XAI_API_KEY not set. RAG will return retrieved context only.")
-            return
-        print(f"[OK] xAI API configured using model: {self.xai_model}")
+        # 2. Gemini Init
+        self.gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+        self.gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+        self.gemini = None
+        if self.gemini_key and not self.gemini_key.startswith("your_"):
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=self.gemini_key)
+                self.gemini = genai.GenerativeModel(
+                    self.gemini_model_name,
+                    generation_config={"temperature": 0.2, "max_output_tokens": 4096},
+                    system_instruction=(
+                        "You are a clinical knowledge assistant for MEDIRAG-XAI, a healthcare AI platform. "
+                        "Answer clearly and comprehensively using the provided clinical evidence. "
+                        "Provide practical lifestyle recommendations, warnings, and when to seek medical help based on the guidelines. "
+                        "Always cite the source documents. "
+                        "Never provide definitive personal diagnosis. Always recommend consulting a physician."
+                    ),
+                )
+                print(f"[OK] Gemini LLM initialized ({self.gemini_model_name})")
+            except Exception as e:
+                print(f"[WARN] Gemini init error: {e}")
 
-    def _query_xai(self, question: str, context: str) -> str:
-        if not hasattr(self, "xai_key") or not self.xai_key or self.xai_key == "your_xai_api_key_here":
-            raise ValueError("XAI_API_KEY not set or invalid.")
-        
-        url = "https://api.x.ai/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self.xai_key}",
-            "Content-Type": "application/json"
-        }
+        # 3. xAI Init (Optional)
+        self.xai_key = os.getenv("XAI_API_KEY", "").strip()
+        self.xai_model = os.getenv("XAI_MODEL", "grok-2").strip()
+
+    def _query_groq(self, question: str, context: str) -> str:
+        """Execute query using Groq API."""
+        if not self.groq_client:
+            raise ValueError("Groq client not configured or API key missing.")
         
         system_instruction = (
             "You are a clinical knowledge assistant for MEDIRAG-XAI, a healthcare AI platform. "
-            "Answer ONLY using the provided clinical evidence. "
+            "Answer clearly and comprehensively using the provided clinical evidence. "
+            "Provide practical lifestyle recommendations, warnings, and when to seek medical help based on the guidelines. "
             "Always cite the source documents. "
-            "If the provided evidence does not contain a clear answer, say so. "
-            "Never provide personal medical advice. Always recommend consulting a physician."
+            "Never provide definitive personal diagnosis. Always recommend consulting a physician."
         )
+        prompt = (
+            f"Clinical Evidence:\n{context}\n\n"
+            f"Patient/Doctor Question: {question}\n\n"
+            "Based on the clinical evidence above, provide a comprehensive, accurate answer. "
+            "Cite the source documents at the end."
+        )
+        chat_completion = self.groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": prompt}
+            ],
+            model=self.groq_model,
+            temperature=0.2,
+            max_tokens=2048,
+        )
+        return chat_completion.choices[0].message.content
+
+    def _query_gemini(self, question: str, context: str) -> str:
+        """Execute query using Google Gemini API."""
+        if not self.gemini:
+            raise ValueError("Gemini client not configured or API key missing.")
         
         prompt = (
             f"Clinical Evidence:\n{context}\n\n"
@@ -178,7 +199,31 @@ class RAGEngine:
             "Based ONLY on the clinical evidence above, provide a comprehensive, accurate answer. "
             "Cite the source documents at the end."
         )
+        response = self.gemini.generate_content(prompt)
+        return response.text
+
+    def _query_xai(self, question: str, context: str) -> str:
+        """Execute query using xAI Grok API."""
+        if not self.xai_key or self.xai_key.startswith("your_"):
+            raise ValueError("XAI_API_KEY not configured.")
         
+        url = "https://api.x.ai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.xai_key}",
+            "Content-Type": "application/json"
+        }
+        system_instruction = (
+            "You are a clinical knowledge assistant for MEDIRAG-XAI, a healthcare AI platform. "
+            "Answer ONLY using the provided clinical evidence. "
+            "Always cite the source documents. "
+            "Never provide personal medical advice. Always recommend consulting a physician."
+        )
+        prompt = (
+            f"Clinical Evidence:\n{context}\n\n"
+            f"Patient/Doctor Question: {question}\n\n"
+            "Based on the clinical evidence above, provide a comprehensive, accurate answer. "
+            "Cite the source documents at the end."
+        )
         payload = {
             "model": self.xai_model,
             "messages": [
@@ -188,7 +233,6 @@ class RAGEngine:
             "temperature": 0.2,
             "max_tokens": 1024
         }
-        
         import httpx
         with httpx.Client(timeout=30.0) as client:
             response = client.post(url, headers=headers, json=payload)
@@ -196,8 +240,49 @@ class RAGEngine:
             result = response.json()
             return result["choices"][0]["message"]["content"]
 
+    def _generate_with_fallback(self, question: str, context: str, retrieved_docs: list, retrieved_metas: list) -> tuple[str, str]:
+        """
+        Execute generation across prioritized provider chain:
+        Primary (Groq / Gemini based on LLM_PROVIDER) -> Fallback Provider -> Local RAG Evidence
+        """
+        preferred = os.getenv("LLM_PROVIDER", "groq").lower().strip()
+        
+        # Build ordered provider list
+        if preferred == "groq":
+            providers = ["groq", "gemini", "xai"]
+        elif preferred == "xai":
+            providers = ["xai", "groq", "gemini"]
+        else:
+            providers = ["gemini", "groq", "xai"]
+
+        errors = []
+        for p in providers:
+            try:
+                if p == "groq" and self.groq_client:
+                    answer = self._query_groq(question, context)
+                    return answer, "groq"
+                elif p == "gemini" and self.gemini:
+                    answer = self._query_gemini(question, context)
+                    return answer, "gemini"
+                elif p == "xai" and self.xai_key and not self.xai_key.startswith("your_"):
+                    answer = self._query_xai(question, context)
+                    return answer, "xai"
+            except Exception as e:
+                err_msg = f"{p.upper()} error: {e}"
+                print(f"[WARN] Failover triggered: {err_msg}")
+                errors.append(err_msg)
+                continue
+
+        # If all LLMs fail or none are configured, gracefully return retrieved clinical documents
+        fallback_answer = self._format_retrieved_answer(retrieved_docs, retrieved_metas)
+        if errors:
+            fallback_answer += f"\n\n*(Note: LLM failover triggered due to: {'; '.join(errors)})*"
+        else:
+            fallback_answer += "\n\n*(Configure GROQ_API_KEY or GEMINI_API_KEY in .env for full AI generation.)*"
+        return fallback_answer, "local_retrieval"
+
     def query(self, question: str, top_k: int = 5) -> Dict[str, Any]:
-        """Full RAG pipeline: embed → retrieve → generate."""
+        """Full RAG pipeline: embed → retrieve → multi-LLM generate with fallback."""
         if not self._initialized or self.collection is None:
             return self._fallback_response(question)
 
@@ -224,6 +309,7 @@ class RAGEngine:
                 "sources": [],
                 "chunks":  [],
                 "question": question,
+                "provider": "none",
             }
 
         # 3. Format context
@@ -237,35 +323,10 @@ class RAGEngine:
 
         context = "\n\n---\n\n".join(context_parts)
 
-        # 4. Generate with LLM
-        answer = None
-        if hasattr(self, "provider") and self.provider == "grok":
-            if hasattr(self, "xai_key") and self.xai_key and self.xai_key != "your_xai_api_key_here":
-                try:
-                    answer = self._query_xai(question, context)
-                except Exception as e:
-                    answer = self._format_retrieved_answer(retrieved_docs, retrieved_metas)
-                    answer += f"\n\n⚠️ Grok API error: {e}. Showing retrieved evidence only."
-            else:
-                answer = self._format_retrieved_answer(retrieved_docs, retrieved_metas)
-                answer += "\n\n⚠️ Set XAI_API_KEY in .env for Grok AI-generated summaries."
-        else:
-            if self.gemini:
-                try:
-                    prompt = (
-                        f"Clinical Evidence:\n{context}\n\n"
-                        f"Patient/Doctor Question: {question}\n\n"
-                        "Based ONLY on the clinical evidence above, provide a comprehensive, accurate answer. "
-                        "Cite the source documents at the end."
-                    )
-                    response = self.gemini.generate_content(prompt)
-                    answer   = response.text
-                except Exception as e:
-                    answer = self._format_retrieved_answer(retrieved_docs, retrieved_metas)
-                    answer += f"\n\n⚠️ Gemini API error: {e}. Showing retrieved evidence only."
-            else:
-                answer = self._format_retrieved_answer(retrieved_docs, retrieved_metas)
-                answer += "\n\n⚠️ Set GEMINI_API_KEY in .env for AI-generated summaries."
+        # 4. Generate with Multi-LLM Fallback
+        answer, used_provider = self._generate_with_fallback(
+            question, context, retrieved_docs, retrieved_metas
+        )
 
         return {
             "answer":   answer,
@@ -275,6 +336,7 @@ class RAGEngine:
                 for doc, meta in zip(retrieved_docs, retrieved_metas)
             ],
             "question": question,
+            "provider": used_provider,
         }
 
     @staticmethod

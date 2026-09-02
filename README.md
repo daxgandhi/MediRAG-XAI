@@ -1,3 +1,13 @@
+---
+title: MediRAG XAI
+emoji: 🏥
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # MEDIRAG-XAI 🏥✨
 ### Explainable Retrieval-Augmented Clinical Decision Support & Patient Education Platform
 

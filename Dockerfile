@@ -3,7 +3,7 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PORT=7860
 
 # Install system dependencies including Tesseract OCR for report scanning
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -31,7 +31,8 @@ COPY . /app
 WORKDIR /app/backend
 RUN python train_model.py
 
+EXPOSE 7860
 EXPOSE 8000
 
-# Start production server
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start production server (listens on $PORT or 7860)
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}"]

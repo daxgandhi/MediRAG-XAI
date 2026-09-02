@@ -1,5 +1,5 @@
 # MEDIRAG-XAI 🏥✨
-### Explainable Retrieval-Augmented Clinical Decision Support and Patient Education Platform
+### Explainable Retrieval-Augmented Clinical Decision Support & Patient Education Platform
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111.0-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.3.0-EE4C2C.svg?logo=pytorch&logoColor=white)](https://pytorch.org)
@@ -12,133 +12,95 @@
 
 ---
 
-## 🌟 Key Features
+## 🌟 Key Capabilities
 
 | Module | Technology | Highlights |
 |---|---|---|
 | **Multi-Disease Prediction** | PyTorch 4-Layer MLP | 41 Disease classes, 132 symptom features, Top-3 differential predictions with confidence % and ICD-10 codes |
 | **Explainable AI (XAI)** | SHAP (KernelExplainer) | Per-patient feature attribution showing positive & negative symptom contributions |
 | **Clinical NLP & NER** | SciSpacy / spaCy + Regex | Extracts Diseases, Drugs, Symptoms, Lab values, and Medical history from unstructured clinical notes |
-| **PDF & Image Report OCR** | PyMuPDF + Tesseract OCR | Parses 30+ lab values (CBC, Thyroid panel, KFT, LFT, Lipid Profile, Diabetes), flags abnormal high/low values with reference ranges |
+| **PDF & Image Report OCR** | PyMuPDF + Tesseract OCR | Parses 30+ lab parameters (CBC, Thyroid panel, KFT, LFT, Lipid Profile, Diabetes), flags abnormal high/low values with reference ranges |
 | **Drug Safety Engine** | Clinical Knowledge Base | Detects drug-drug interactions, FDA pregnancy categories (A-X), allergy alerts, and disease-specific contraindications |
 | **Clinical RAG Engine** | ChromaDB + SentenceTransformers | Multi-provider LLM support (Groq, Google Gemini, xAI Grok) with clinical guideline citations (WHO, CDC, ADA) |
 | **Doctor & Patient Portals** | Vanilla CSS + Bootstrap 5 + Chart.js | Responsive dark medical UI, interactive symptom grid, real-time SHAP charts, analytics dashboards |
 
 ---
 
-## 🏗️ Architecture & Dataflow
+## 🏗️ Production Architecture
 
 ```mermaid
 graph TD
-    A[Client Browser: Doctor / Patient] -->|HTTP / REST API| B(FastAPI Backend)
+    User[User / Doctor / Patient] -->|Browser UI| Frontend[Frontend Edge CDN]
     
-    subgraph Frontend [Decoupled Global Edge CDN]
-        Vercel[Vercel / Netlify / GitHub Pages]
-        Static[Doctor Portal • Patient Chatbot • Analytics Dashboard]
+    subgraph Frontend Hosting [Vercel / Netlify / GitHub Pages / Unified]
+        Frontend --> UI_Doctor[Doctor Portal]
+        Frontend --> UI_Patient[Patient Chatbot]
+        Frontend --> UI_Analytics[Analytics Dashboard]
+        Frontend --> Config[js/config.js: API_BASE_URL]
     end
 
-    subgraph Backend [Inference & API Engine - Render / Docker]
-        B --> C[PyTorch MLP Disease Classifier]
-        B --> D[SHAP KernelExplainer]
-        B --> E[Clinical NLP / NER Engine]
-        B --> F[PyMuPDF + Tesseract OCR Report Analyzer]
-        B --> G[Drug Safety & Interaction Checker]
-        B --> H[Clinical RAG Engine]
+    Config -->|REST JSON API / CORS| Backend[FastAPI Backend - Render / Docker]
+
+    subgraph Backend Engine [Python 3.11 + Uvicorn]
+        Backend --> Classifier[PyTorch MLP Disease Classifier]
+        Backend --> SHAP[SHAP KernelExplainer]
+        Backend --> NER[Clinical NLP / NER]
+        Backend --> OCR[PyMuPDF + Tesseract OCR]
+        Backend --> DrugKB[Drug Safety Knowledge Base]
+        Backend --> RAG[Clinical RAG Engine]
     end
 
-    subgraph Knowledge & Vector Store
-        H --> I[(ChromaDB Vector Store)]
-        H --> J[SentenceTransformers all-MiniLM-L6-v2]
-        H --> K[Groq / Gemini / xAI LLM API]
+    subgraph Knowledge & LLMs
+        RAG --> Chroma[(ChromaDB Vector Store)]
+        RAG --> Embeddings[all-MiniLM-L6-v2 Embeddings]
+        RAG --> LLM[Groq / Gemini / xAI LLM APIs]
     end
 
-    subgraph Cloud Persistence
-        B --> L[(MongoDB Atlas Cloud)]
+    subgraph Database
+        Backend --> MongoDB[(MongoDB Atlas Cloud / Local)]
     end
 ```
 
 ---
 
-## 📊 Dataset Specifications
+## ⚙️ Environment Variables Reference
 
-* **Source**: [Kaggle — Disease Prediction Using Machine Learning](https://www.kaggle.com/datasets/kaushil268/disease-prediction-using-machine-learning)
-* **Training Records**: 4,920 samples
-* **Testing Records**: 42 validation cases
-* **Features**: 132 binary symptom indicators
-* **Target Classes**: 41 distinct medical conditions
-* **Model Validation Accuracy**: **97.56%**
+Create a `.env` file in the `backend/` directory based on `.env.example`:
 
----
-
-## 📁 Repository Structure
-
-```
-MediRAG-XAI/
-├── backend/
-│   ├── main.py                  # Uvicorn FastAPI server entry point
-│   ├── app.py                   # REST API routes, middleware, static mount
-│   ├── train_model.py           # PyTorch MLP training pipeline
-│   ├── requirements.txt         # Production Python dependencies
-│   ├── .env                     # Environment configuration (secrets)
-│   ├── model/
-│   │   ├── classifier.py        # PyTorch Neural Network model & inference
-│   │   ├── shap_explainer.py    # SHAP feature importance interpreter
-│   │   ├── ner.py               # Clinical named entity recognition
-│   │   ├── report_analyzer.py   # PDF text extraction & OCR lab value parser
-│   │   ├── drug_checker.py      # Drug interaction & contraindication engine
-│   │   └── rag_engine.py        # ChromaDB vector retrieval & LLM generation
-│   ├── saved_models/            # Trained weights (.pth), metadata, encoder
-│   ├── data/
-│   │   ├── datasets/            # Training.csv, Testing.csv, Symptom mappings
-│   │   ├── guidelines/          # Clinical guidelines (Diabetes, Hypertension, TB, etc.)
-│   │   └── patient_docs/        # Patient educational materials
-│   ├── database/
-│   │   └── mongodb.py           # Async MongoDB driver (Motor) with fallback
-│   └── tests/
-│       └── test_medirag.py      # Full 37-test automated test suite
-├── frontend/
-│   ├── index.html               # Landing & product page
-│   ├── doctor.html              # Clinical Doctor Decision Portal
-│   ├── patient.html             # Patient AI Assistant & Education Chatbot
-│   ├── analytics.html           # Real-time clinical analytics dashboard
-│   ├── css/style.css            # Dark glassmorphic medical theme
-│   └── js/
-│       ├── app.js               # Dynamic API client & shared utilities
-│       ├── doctor.js            # Doctor portal interactions & SHAP charts
-│       ├── patient.js           # Streaming chat & citation renderer
-│       └── analytics.js         # Chart.js analytics visualizations
-├── vector_db/                   # ChromaDB persistent vector storage
-├── Dockerfile                   # Multi-stage production container with Tesseract
-├── .dockerignore                # Exclusions for clean container builds
-├── render.yaml                  # One-click Render cloud deployment blueprint
-├── setup.bat                    # One-click Windows setup script
-└── README.md
-```
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `LLM_PROVIDER` | No | `groq` | Primary LLM provider (`groq`, `gemini`, `xai`, `none`) |
+| `GROQ_API_KEY` | Recommended | `""` | Groq API Key ([console.groq.com](https://console.groq.com)) for ultra-fast free inference |
+| `GROQ_MODEL` | No | `qwen/qwen3.8-27b` | Groq model identifier (`qwen/qwen3.8-27b`, `llama-3.3-70b-versatile`) |
+| `GEMINI_API_KEY` | Optional | `""` | Google Gemini API Key ([aistudio.google.com](https://aistudio.google.com)) |
+| `GEMINI_MODEL` | No | `gemini-2.5-flash` | Gemini model identifier |
+| `XAI_API_KEY` | Optional | `""` | xAI Grok API Key ([console.x.ai](https://console.x.ai)) |
+| `XAI_MODEL` | No | `grok-2` | xAI model identifier |
+| `MONGODB_URI` | No | `mongodb://localhost:27017` | MongoDB connection URI (MongoDB Atlas or local) |
+| `PORT` | No | `8000` | Port for the FastAPI server (Render/Railway set this automatically) |
+| `HOST` | No | `0.0.0.0` | Host IP for FastAPI server |
+| `CORS_ORIGINS` | No | `*` | Allowed CORS origins (comma-separated, e.g. `https://my-app.vercel.app`) |
 
 ---
 
-## ⚡ Quick Start (Local Setup)
+## 💻 Local Development Setup
 
-### Prerequisites
-* Python 3.10 or 3.11
-* Git
-* (Optional) Tesseract OCR for image-based lab report parsing
-
-### 1. Clone & Setup Virtual Environment
+### 1. Clone & Activate Virtual Environment
 ```bash
 git clone https://github.com/daxgandhi/MediRAG-XAI.git
 cd MediRAG-XAI
 
-# Create and activate virtual environment
+# Create virtual environment
 python -m venv .venv
 
-# Windows:
+# Activate environment:
+# Windows (PowerShell):
 .venv\Scripts\activate
 # Linux/macOS:
 source .venv/bin/activate
 ```
 
-### 2. Install Dependencies & NLP Models
+### 2. Install Dependencies
 ```bash
 cd backend
 pip install -r requirements.txt
@@ -146,29 +108,21 @@ python -m spacy download en_core_web_sm
 ```
 
 ### 3. Configure `.env`
-Create or edit `backend/.env`:
-```env
-LLM_PROVIDER=groq
-GROQ_API_KEY=your_groq_api_key_here
-GROQ_MODEL=qwen/qwen3.8-27b
-
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
-
-MONGODB_URI=mongodb://localhost:27017
-```
-*(Get free Groq API keys at [console.groq.com](https://console.groq.com) and Gemini keys at [aistudio.google.com](https://aistudio.google.com))*
-
-### 4. Train Model & Launch Server
 ```bash
-# Train the PyTorch model
+cp .env.example .env
+# Edit .env and insert your API keys
+```
+
+### 4. Run the Backend & Access App
+```bash
+# Model will automatically train if weights are missing, or train manually:
 python train_model.py
 
-# Launch FastAPI backend
+# Start server:
 python main.py
 ```
 
-* **Main App**: [http://localhost:8000](http://localhost:8000)
+* **Landing Page**: [http://localhost:8000/](http://localhost:8000/)
 * **Doctor Portal**: [http://localhost:8000/doctor.html](http://localhost:8000/doctor.html)
 * **Patient Chatbot**: [http://localhost:8000/patient.html](http://localhost:8000/patient.html)
 * **Analytics Dashboard**: [http://localhost:8000/analytics.html](http://localhost:8000/analytics.html)
@@ -176,33 +130,50 @@ python main.py
 
 ---
 
-## 🚀 100% Free Production Deployment
+## 🌐 Production Deployment Guide
 
-### Option A: Unified Deployment (Render - Free)
-1. Fork or push this repository to your GitHub account.
-2. Sign up on [Render.com](https://render.com).
-3. Click **New +** $\rightarrow$ **Web Service** $\rightarrow$ Connect `MediRAG-XAI`.
-4. Render will detect [`render.yaml`](file:///c:/Users/asus/Desktop/New%20folder%20(3)/MediRAG-XAI/render.yaml) and the [`Dockerfile`](file:///c:/Users/asus/Desktop/New%20folder%20(3)/MediRAG-XAI/Dockerfile).
-5. Set your secret environment variables (`GROQ_API_KEY`, `GEMINI_API_KEY`, `MONGODB_URI`).
-6. Click **Deploy Web Service**.
+You can deploy MediRAG-XAI in two modes:
 
-### Option B: Decoupled High-Performance Deployment (Recommended)
-To minimize backend CPU and RAM usage to near zero:
-1. **Deploy Backend API** on [Render](https://render.com) or [Koyeb](https://www.koyeb.com).
-2. **Deploy Frontend** on [Vercel](https://vercel.com) (Import repo $\rightarrow$ Set Root Directory to `frontend` $\rightarrow$ Deploy) or **GitHub Pages**.
-3. The frontend automatically discovers and communicates with your backend API.
+### Option A: Unified Full-Stack (Render - Free)
+Deploys both frontend and backend together on Render using the included [`render.yaml`](file:///c:/Users/asus/Desktop/New%20folder%20(3)/MediRAG-XAI/render.yaml) or Dockerfile:
+
+1. Push your code to GitHub.
+2. Log into [Render.com](https://render.com) $\rightarrow$ **New +** $\rightarrow$ **Web Service**.
+3. Select your repository. Render will automatically detect the configuration.
+4. Set your environment variables in the Render dashboard (`GROQ_API_KEY`, `GEMINI_API_KEY`, `MONGODB_URI`).
+5. Click **Deploy Web Service**.
 
 ---
 
-## 🐳 Docker Deployment
+### Option B: Decoupled Deployment (Lowest Server CPU & RAM)
+Hosting the static frontend on a Global Edge CDN (Vercel / Netlify / GitHub Pages) offloads 100% of static asset serving from your backend:
 
-Run the complete platform inside a self-contained container:
+#### 1. Deploy Backend (API Server)
+* Deploy the backend on **Render**, **Railway**, or **Koyeb**.
+* Copy the deployed backend URL (e.g. `https://medirag-backend.onrender.com`).
+* Set `CORS_ORIGINS` in your backend environment to your frontend domain (or `*`).
+
+#### 2. Configure & Deploy Frontend
+* In [`frontend/js/config.js`](file:///c:/Users/asus/Desktop/New%20folder%20(3)/MediRAG-XAI/frontend/js/config.js), set your backend API URL:
+  ```javascript
+  const MEDIRAG_CONFIG = {
+    API_BASE_URL: 'https://medirag-backend.onrender.com'
+  };
+  ```
+  *(Alternatively, you can leave it as `""` and set it dynamically in the browser console via `localStorage.setItem('MEDIRAG_API_URL', 'https://medirag-backend.onrender.com')`)*
+* Deploy the `frontend/` folder to **Vercel** (Import repository $\rightarrow$ set Root Directory to `frontend`) or **GitHub Pages**.
+
+---
+
+## 🐳 Docker Container Deployment
+
+The multi-stage [`Dockerfile`](file:///c:/Users/asus/Desktop/New%20folder%20(3)/MediRAG-XAI/Dockerfile) includes Python 3.11, PyTorch, and Tesseract OCR:
 
 ```bash
 # Build the Docker image
 docker build -t medirag-xai .
 
-# Run container
+# Run container with environment variables
 docker run -d -p 8000:8000 --env-file backend/.env --name medirag-app medirag-xai
 ```
 
@@ -210,7 +181,7 @@ docker run -d -p 8000:8000 --env-file backend/.env --name medirag-app medirag-xa
 
 ## 🧪 Testing Suite
 
-Run the automated test suite (37 unit & integration tests covering classifier, SHAP, NER, drug checker, report extraction, and API routes):
+Run the full automated test suite (37 unit & integration tests covering classifier, SHAP, NER, drug checker, report extraction, and API routes):
 
 ```bash
 pytest backend/tests/test_medirag.py -v
@@ -218,26 +189,29 @@ pytest backend/tests/test_medirag.py -v
 
 ---
 
-## 🔌 API Reference
+## 📌 Free Hosting Considerations & Vector Storage Architecture
 
-| Endpoint | Method | Description | Payload Example |
-|---|---|---|---|
-| `/health` | `GET` | Health status and module availability | — |
-| `/api/predict` | `POST` | Disease prediction with SHAP explanations | `{"symptoms": ["itching", "skin_rash"], "patient_age": 30}` |
-| `/api/ner` | `POST` | Clinical entity extraction from raw text | `{"text": "Patient has diabetes, prescribed Metformin 500mg"}` |
-| `/api/analyze-report` | `POST` | PDF & OCR lab value extraction & normal ranges | `multipart/form-data (file: report.pdf)` |
-| `/api/check-drug` | `POST` | Drug interaction, allergy, & pregnancy safety | `{"drug_name": "lisinopril", "is_pregnant": true}` |
-| `/api/chat` | `POST` | RAG-powered clinical chatbot with citations | `{"message": "What are normal HbA1c ranges?", "session_id": "doc1"}` |
-| `/api/analytics` | `GET` | Aggregated disease & clinical statistics | — |
+### 1. Cold Starts on Free Tiers
+* **Render Free Web Services** spin down after 15 minutes of inactivity. The first request after sleep may take ~30-45 seconds to spin up.
+* **Keep-Alive Tip**: Use a free monitoring service like [UptimeRobot](https://uptimerobot.com) to ping your `/health` endpoint every 5 minutes to prevent sleep.
+
+### 2. ChromaDB Vector Store & Container Lifecycle
+* **Local / Ephemeral Storage**: On container platforms (like Render without a paid persistent disk), local files written during container runtime reset on redeployment.
+* **Self-Healing Indexing**: `RAGEngine` automatically checks if vectors exist. If missing on startup, it automatically re-indexes all guidelines in `backend/data/guidelines` in ~2-4 seconds.
+* **Enterprise Scaling**: For large-scale production, connect to a hosted managed vector database (such as **Pinecone**, **Qdrant Cloud**, or **Chroma Cloud**) or attach a persistent block storage volume.
+
+### 3. Model Training Lifecycle
+* PyTorch MLP model training (`train_model.py`) trains on 4,920 records for 50 epochs in **< 5 seconds** on standard CPU.
+* The application is self-healing: if model weights are missing on fresh checkout/deployment, `DiseaseClassifier` automatically trains lightweight weights on first initialization to ensure zero downtime.
 
 ---
 
-## ⚠️ Medical Disclaimer
+## ⚠️ Clinical & Academic Disclaimer
 
-**IMPORTANT NOTICE**: This platform is designed as an **educational and decision-support prototype**. It does not constitute formal medical diagnosis, clinical prescription, or personalized medical advice. Always consult a licensed healthcare practitioner for medical diagnosis and treatment.
+**IMPORTANT NOTICE**: This application is developed for **academic research, educational demonstrations, and clinical decision support prototyping**. It does NOT constitute medical advice, diagnosis, or treatment. Always seek the advice of a physician or qualified healthcare provider with any questions regarding medical conditions.
 
 ---
 
 ## 📄 License
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
+Distributed under the **MIT License**.

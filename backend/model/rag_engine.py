@@ -44,6 +44,19 @@ class RAGEngine:
         print(f"[OK] Embedder loaded: {EMBED_MODEL}")
 
     def _init_chroma(self):
+        """
+        Initializes ChromaDB Persistent Client.
+        
+        NOTE ON STORAGE & RESTART BEHAVIOR:
+        - In local development: Vectors persist on disk at `vector_db/chroma_store`.
+        - In cloud container hosting (Render, Railway, Fly.io without persistent disks):
+          Container restarts/redeploys will wipe local ephemeral disk.
+          However, `_ingest_documents()` below is self-healing: if the collection is empty,
+          it automatically re-embeds and indexes all guideline/patient documents on startup (~2-4 seconds).
+        - Recommended for High-Scale Enterprise Production:
+          Connect to a hosted cloud vector database (e.g., Pinecone, Qdrant Cloud, Chroma Cloud)
+          or mount a persistent block storage volume to `vector_db/chroma_store`.
+        """
         import chromadb
         CHROMA_DIR.mkdir(parents=True, exist_ok=True)
         client = chromadb.PersistentClient(path=str(CHROMA_DIR))

@@ -147,9 +147,20 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Configure CORS: allow custom origins via CORS_ORIGINS env or default to permissive for local dev
+    cors_env = os.getenv("CORS_ORIGINS", "").strip()
+    if cors_env and cors_env != "*":
+        allowed_origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+        # Always retain localhost dev origins for local testing convenience
+        for dev_url in ["http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:5500", "http://127.0.0.1:5500", "http://localhost:3000"]:
+            if dev_url not in allowed_origins:
+                allowed_origins.append(dev_url)
+    else:
+        allowed_origins = ["*"]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

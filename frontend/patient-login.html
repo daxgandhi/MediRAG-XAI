@@ -117,9 +117,9 @@
 </div>
 
 <script src="vendor/bootstrap.bundle.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
 <script>
-  const API_BASE = "/api";
-
   document.getElementById('patientLoginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
@@ -128,16 +128,11 @@
     errorDiv.style.display = 'none';
 
     try {
-      const res = await fetch(`${API_BASE}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          role: 'patient', 
-          email: email,
-          password: password 
-        })
+      const data = await api.post('/api/login', { 
+        role: 'patient', 
+        email: email,
+        password: password 
       });
-      const data = await res.json();
       if (data.success) {
         localStorage.setItem('medirag_user', JSON.stringify(data.user));
         window.location.href = 'patient.html';
@@ -146,7 +141,7 @@
         errorDiv.style.display = 'block';
       }
     } catch (err) {
-      errorDiv.textContent = 'Server error. Please try again later.';
+      errorDiv.textContent = err.message || 'Server error. Please try again later.';
       errorDiv.style.display = 'block';
     }
   });
@@ -163,17 +158,12 @@
     successDiv.style.display = 'none';
 
     try {
-      const res = await fetch(`${API_BASE}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          role: 'patient', 
-          name: name,
-          email: email,
-          password: password 
-        })
+      const data = await api.post('/api/register', { 
+        role: 'patient', 
+        name: name,
+        email: email,
+        password: password 
       });
-      const data = await res.json();
       if (data.success) {
         successDiv.style.display = 'block';
         document.getElementById('patientRegisterForm').reset();
@@ -182,7 +172,7 @@
         errorDiv.style.display = 'block';
       }
     } catch (err) {
-      errorDiv.textContent = 'Server error. Please try again later.';
+      errorDiv.textContent = err.message || 'Server error. Please try again later.';
       errorDiv.style.display = 'block';
     }
   });

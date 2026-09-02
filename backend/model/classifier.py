@@ -94,6 +94,15 @@ class DiseaseClassifier:
         self.symptom_to_idx = {}
         self.model = None
 
+        # Self-healing: if model weights or metadata are missing, train on startup
+        if not META_PATH.exists() or not MODEL_PATH.exists() or not ENC_PATH.exists():
+            print("[INFO] Model weights or metadata not found. Initializing auto-training...")
+            try:
+                from train_model import train
+                train(epochs=30)
+            except Exception as e:
+                print(f"[WARN] Auto-training error: {e}")
+
         if META_PATH.exists():
             with open(META_PATH) as f:
                 meta = json.load(f)
@@ -114,7 +123,6 @@ class DiseaseClassifier:
                     print(f"[WARN] Could not load weights: {e}")
                     self.model.eval()
             else:
-                print("[WARN] Model weights not found. Run: python train_model.py")
                 self.model.eval()
 
             if ENC_PATH.exists():
@@ -122,8 +130,7 @@ class DiseaseClassifier:
             else:
                 self.label_encoder = None
         else:
-            print("[WARN] model_meta.json not found. Run: python train_model.py")
-            # Fallback defaults so API doesn't crash
+            print("[WARN] Running with fallback dataset metadata")
             self._init_fallback()
 
     def _init_fallback(self):

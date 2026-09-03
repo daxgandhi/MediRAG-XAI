@@ -390,7 +390,11 @@ def create_app() -> FastAPI:
                 "total_drug_checks": 400,
             })
 
-    # Mount the frontend directory to serve static files
-    app.mount("/", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../frontend"), html=True), name="frontend")
+    # Mount the frontend directory to serve static files (unified deployment only)
+    # When frontend is deployed separately (e.g. on Vercel), skip this to avoid
+    # the catch-all mount intercepting API routes.
+    frontend_dir = os.path.join(os.path.dirname(__file__), "../frontend")
+    if os.path.isdir(frontend_dir) and cors_env in ("", "*"):
+        app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
     return app

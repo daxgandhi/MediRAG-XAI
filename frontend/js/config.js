@@ -39,8 +39,8 @@ const MEDIRAG_CONFIG = {
         return window.location.port === '8000' ? '' : 'http://localhost:8000';
       }
 
-      // 3. Deployed default: relative path (same origin — works for unified Render deploy)
-      return '';
+      // 3. Deployed default: point to Render backend (decoupled deploy)
+      return 'https://medirag-xai-90c1.onrender.com';
     }
     return '';
   })(),

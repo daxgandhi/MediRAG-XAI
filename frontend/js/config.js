@@ -39,9 +39,8 @@ const MEDIRAG_CONFIG = {
         return window.location.port === '8000' ? '' : 'http://localhost:8000';
       }
 
-      // 3. Deployed default: relative path (same origin)
-      // When deploying frontend on Vercel/Netlify, replace '' with your backend URL or set via localStorage
-      return '';
+      // 3. Deployed default: point to Render backend
+      return 'https://medirag-xai-90c1.onrender.com';
     }
     return '';
   })(),

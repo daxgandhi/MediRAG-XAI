@@ -40,7 +40,7 @@ const MEDIRAG_CONFIG = {
       }
 
       // 3. Deployed default: point to Render backend (decoupled deploy)
-      return 'https://medirag-xai-90c1.onrender.com';
+      return 'https://medirag-xai-90gj.onrender.com';
     }
     return '';
   })(),

@@ -19,6 +19,10 @@ class MediDB:
         self.client = None
         self.db     = None
         self._connected = False
+        self._memory   = {
+            "predictions": [], "reports": [], "chat_history": [],
+            "drug_alerts": [], "users": []
+        }
         self._try_connect()
 
     def _try_connect(self):
@@ -31,10 +35,12 @@ class MediDB:
         except Exception as e:
             print(f"[WARN] MongoDB not available: {e}. Using in-memory fallback.")
             self._connected = False
-            self._memory   = {
-                "predictions": [], "reports": [], "chat_history": [],
-                "drug_alerts": [], "users": []
-            }
+
+    def _fallback_to_memory(self, reason: str):
+        """Switch to in-memory mode when MongoDB operations fail (e.g. auth errors)."""
+        print(f"[WARN] MongoDB operation failed: {reason}")
+        print("[WARN] Switching to in-memory fallback for all future operations.")
+        self._connected = False
 
     # ── Write Operations ───────────────────────────────────────────────────────
     async def save_prediction(self, data: Dict) -> Optional[str]:
@@ -44,9 +50,8 @@ class MediDB:
                 result = await self.db.predictions.insert_one(data)
                 return str(result.inserted_id)
             except Exception as e:
-                print(f"DB write error (prediction): {e}")
-        else:
-            self._memory["predictions"].append(data)
+                self._fallback_to_memory(str(e))
+        self._memory["predictions"].append(data)
         return None
 
     async def save_report(self, data: Dict) -> Optional[str]:
@@ -56,9 +61,8 @@ class MediDB:
                 result = await self.db.reports.insert_one(data)
                 return str(result.inserted_id)
             except Exception as e:
-                print(f"DB write error (report): {e}")
-        else:
-            self._memory["reports"].append(data)
+                self._fallback_to_memory(str(e))
+        self._memory["reports"].append(data)
         return None
 
     async def save_chat(self, data: Dict) -> Optional[str]:
@@ -68,9 +72,8 @@ class MediDB:
                 result = await self.db.chat_history.insert_one(data)
                 return str(result.inserted_id)
             except Exception as e:
-                print(f"DB write error (chat): {e}")
-        else:
-            self._memory["chat_history"].append(data)
+                self._fallback_to_memory(str(e))
+        self._memory["chat_history"].append(data)
         return None
 
     async def save_drug_alert(self, data: Dict) -> Optional[str]:
@@ -80,9 +83,8 @@ class MediDB:
                 result = await self.db.drug_alerts.insert_one(data)
                 return str(result.inserted_id)
             except Exception as e:
-                print(f"DB write error (drug_alert): {e}")
-        else:
-            self._memory["drug_alerts"].append(data)
+                self._fallback_to_memory(str(e))
+        self._memory["drug_alerts"].append(data)
         return None
 
     async def save_user(self, user_data: Dict) -> Optional[str]:
@@ -101,28 +103,34 @@ class MediDB:
                 print(f"DB write error (user): {e}")
                 if "duplicate" in err_str or "E11000" in str(e):
                     raise ValueError("A user with this email or medical ID already exists.")
+                if "auth" in err_str or "authentication" in err_str:
+                    # Auth failed — fall back to in-memory and retry
+                    self._fallback_to_memory(str(e))
+                    return await self._save_user_memory(user_data)
                 raise ValueError(f"Database error: {e}")
         else:
-            # Check for unique email in memory
-            for u in self._memory["users"]:
-                if u.get("email") == user_data.get("email"):
-                    raise ValueError("A user with this email already exists.")
-                if u.get("medical_id") == user_data.get("medical_id"):
-                    raise ValueError("A user with this medical ID already exists.")
-            self._memory["users"].append(user_data)
-            return "mem_user_" + str(len(self._memory["users"]))
+            return await self._save_user_memory(user_data)
         return None
+
+    async def _save_user_memory(self, user_data: Dict) -> Optional[str]:
+        """Save user to in-memory store with uniqueness checks."""
+        for u in self._memory["users"]:
+            if user_data.get("email") and u.get("email") == user_data.get("email"):
+                raise ValueError("A user with this email already exists.")
+            if user_data.get("medical_id") and u.get("medical_id") == user_data.get("medical_id"):
+                raise ValueError("A user with this medical ID already exists.")
+        self._memory["users"].append(user_data)
+        return "mem_user_" + str(len(self._memory["users"]))
 
     async def get_user_by_email(self, email: str) -> Optional[Dict]:
         if self._connected:
             try:
                 return await self.db.users.find_one({"email": email})
             except Exception as e:
-                print(f"DB read error (user by email): {e}")
-        else:
-            for u in self._memory["users"]:
-                if u.get("email") == email:
-                    return u
+                self._fallback_to_memory(str(e))
+        for u in self._memory["users"]:
+            if u.get("email") == email:
+                return dict(u)
         return None
 
     async def get_user_by_medical_id(self, medical_id: str) -> Optional[Dict]:
@@ -130,11 +138,10 @@ class MediDB:
             try:
                 return await self.db.users.find_one({"medical_id": medical_id})
             except Exception as e:
-                print(f"DB read error (user by medical_id): {e}")
-        else:
-            for u in self._memory["users"]:
-                if u.get("medical_id") == medical_id:
-                    return u
+                self._fallback_to_memory(str(e))
+        for u in self._memory["users"]:
+            if u.get("medical_id") == medical_id:
+                return dict(u)
         return None
 
     # ── Analytics Aggregation ──────────────────────────────────────────────────

@@ -155,13 +155,17 @@ def create_app() -> FastAPI:
         for dev_url in ["http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:5500", "http://127.0.0.1:5500", "http://localhost:3000"]:
             if dev_url not in allowed_origins:
                 allowed_origins.append(dev_url)
+        use_credentials = True
     else:
         allowed_origins = ["*"]
+        # IMPORTANT: Browsers block credentials with wildcard origins.
+        # In production with decoupled deploy, set CORS_ORIGINS to your Vercel URL.
+        use_credentials = False
 
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
-        allow_credentials=True,
+        allow_credentials=use_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -393,8 +397,10 @@ def create_app() -> FastAPI:
     # Mount the frontend directory to serve static files (unified deployment only)
     # When frontend is deployed separately (e.g. on Vercel), skip this to avoid
     # the catch-all mount intercepting API routes.
+    # Also skip if SKIP_STATIC_MOUNT is set (useful for Render with decoupled frontend).
+    skip_static = os.getenv("SKIP_STATIC_MOUNT", "").strip().lower() in ("1", "true", "yes")
     frontend_dir = os.path.join(os.path.dirname(__file__), "../frontend")
-    if os.path.isdir(frontend_dir) and cors_env in ("", "*"):
+    if not skip_static and os.path.isdir(frontend_dir) and cors_env in ("", "*"):
         app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
     return app

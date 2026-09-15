@@ -22,4 +22,8 @@ services:
         value: grok-2
       - key: MONGODB_URI
         sync: false
+      - key: CORS_ORIGINS
+        value: https://medi-rag-xai.vercel.app
+      - key: SKIP_STATIC_MOUNT
+        value: "true"
 

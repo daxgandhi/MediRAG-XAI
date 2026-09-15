@@ -194,8 +194,10 @@ def create_app() -> FastAPI:
             user_data["password"] = hashlib.sha256(req.password.encode()).hexdigest()
             user_id = await db.save_user(user_data)
             if not user_id:
-                raise HTTPException(status_code=400, detail="User already exists or failed to create")
+                raise HTTPException(status_code=400, detail="Failed to create user")
             return JSONResponse({"success": True, "user_id": user_id, "role": req.role})
+        except ValueError as ve:
+            raise HTTPException(status_code=409, detail=str(ve))
         except Exception as e:
             traceback.print_exc()
             if isinstance(e, HTTPException):

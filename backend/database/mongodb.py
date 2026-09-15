@@ -89,18 +89,26 @@ class MediDB:
         user_data["timestamp"] = datetime.utcnow()
         if self._connected:
             try:
-                # Ensure unique index on email
-                await self.db.users.create_index("email", unique=True)
+                # Ensure unique indexes on email and medical_id
+                if user_data.get("email"):
+                    await self.db.users.create_index("email", unique=True, sparse=True)
+                if user_data.get("medical_id"):
+                    await self.db.users.create_index("medical_id", unique=True, sparse=True)
                 result = await self.db.users.insert_one(user_data)
                 return str(result.inserted_id)
             except Exception as e:
+                err_str = str(e).lower()
                 print(f"DB write error (user): {e}")
+                if "duplicate" in err_str or "E11000" in str(e):
+                    raise ValueError("A user with this email or medical ID already exists.")
+                raise ValueError(f"Database error: {e}")
         else:
             # Check for unique email in memory
             for u in self._memory["users"]:
                 if u.get("email") == user_data.get("email"):
-                    print(f"DB write warning: email {user_data.get('email')} already exists in memory.")
-                    return None
+                    raise ValueError("A user with this email already exists.")
+                if u.get("medical_id") == user_data.get("medical_id"):
+                    raise ValueError("A user with this medical ID already exists.")
             self._memory["users"].append(user_data)
             return "mem_user_" + str(len(self._memory["users"]))
         return None
